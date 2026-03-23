@@ -1,31 +1,35 @@
 #!/bin/bash
-# github_sync.sh
-# Reconnects local ATS_10_webapp folder to GitHub and pushes current state
+# scripts/git_update.sh
+# Sync local ATS_10_webapp with GitHub using SSH and prompt for commit message
 
-# Move to project root
 cd ~/projects_series/ATS_10_webapp || exit
+
+# Start ssh-agent and add ATS_10 key (if not already)
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519_ats10
 
 # Initialize git if not already
 if [ ! -d ".git" ]; then
     git init
 fi
 
-# Remove existing origin (in case it exists)
+# Ensure SSH remote is set
 git remote remove origin 2>/dev/null
+git remote add origin git@github.com:Naser507/ATS_10-webapp.git
 
-# Add your GitHub repository
-git remote add origin https://github.com/Naser507/ATS_10-webapp.git
-
-# Fetch remote to avoid surprises
+# Fetch remote branch
 git fetch origin
 
-# Stage all current files (empty structure)
+# Stage all changes
 git add .
 
-# Commit changes
-git commit -m "Reset local project structure"
+# Prompt for commit message
+read -rp "Enter commit message: " commit_msg
 
-# Force push to overwrite GitHub with current state
+# Commit changes
+git commit -m "$commit_msg" 2>/dev/null || echo "No changes to commit"
+
+# Push to GitHub
 git push origin main --force
 
-echo "✅ GitHub sync complete. Repo now reflects local clean structure."
+echo "✅ GitHub sync complete using SSH."
